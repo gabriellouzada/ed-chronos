@@ -2,6 +2,231 @@ import React, { useState, useEffect } from 'react';
 import { Plus, X, Clock, Users, BookOpen, Calendar, AlertTriangle, CheckCircle, HelpCircle } from 'lucide-react';
 import './App.css';
 
+// Componente para configurar disponibilidade de horários do professor
+const ProfessorScheduleConfig = ({ horarios, setHorarios, turmas }) => {
+  const diasSemana = [
+    { key: 'segunda', label: 'Segunda-feira' },
+    { key: 'terca', label: 'Terça-feira' },
+    { key: 'quarta', label: 'Quarta-feira' },
+    { key: 'quinta', label: 'Quinta-feira' },
+    { key: 'sexta', label: 'Sexta-feira' }
+  ];
+
+  const periodosComuns = [
+    { label: 'Manhã (07:00 - 12:00)', inicio: '07:00', fim: '12:00' },
+    { label: 'Tarde (13:00 - 18:00)', inicio: '13:00', fim: '18:00' },
+    { label: 'Noite (19:00 - 23:00)', inicio: '19:00', fim: '23:00' }
+  ];
+
+  const toggleDisponibilidade = (dia, periodo) => {
+    const novaDisponibilidade = [...horarios];
+    const index = novaDisponibilidade.findIndex(h => 
+      h.dia === dia && h.inicio === periodo.inicio && h.fim === periodo.fim
+    );
+
+    if (index >= 0) {
+      // Remove disponibilidade
+      novaDisponibilidade.splice(index, 1);
+    } else {
+      // Adiciona disponibilidade
+      novaDisponibilidade.push({
+        dia,
+        inicio: periodo.inicio,
+        fim: periodo.fim,
+        label: periodo.label
+      });
+    }
+    
+    setHorarios(novaDisponibilidade);
+  };
+
+  const isDisponivel = (dia, periodo) => {
+    return horarios.some(h => 
+      h.dia === dia && h.inicio === periodo.inicio && h.fim === periodo.fim
+    );
+  };
+
+  const adicionarHorarioCustomizado = (dia) => {
+    const inicio = prompt('Horário de início (HH:MM):');
+    const fim = prompt('Horário de fim (HH:MM):');
+    
+    if (inicio && fim) {
+      const novaDisponibilidade = [...horarios];
+      novaDisponibilidade.push({
+        dia,
+        inicio,
+        fim,
+        label: `${inicio} - ${fim}`,
+        customizado: true
+      });
+      setHorarios(novaDisponibilidade);
+    }
+  };
+
+  const removerHorarioCustomizado = (index) => {
+    const novaDisponibilidade = [...horarios];
+    novaDisponibilidade.splice(index, 1);
+    setHorarios(novaDisponibilidade);
+  };
+
+  return (
+    <div style={{ marginTop: '1rem' }}>
+      <label style={{
+        display: 'block',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        color: '#374151',
+        marginBottom: '0.75rem'
+      }}>
+        Disponibilidade de Horários:
+      </label>
+      
+      {/* Grid de disponibilidade */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '150px repeat(3, 1fr)',
+        gap: '0.5rem',
+        marginBottom: '1rem',
+        fontSize: '0.75rem'
+      }}>
+        {/* Header */}
+        <div style={{ fontWeight: 600, color: '#374151' }}>Dia da Semana</div>
+        {periodosComuns.map(periodo => (
+          <div key={periodo.inicio} style={{ 
+            fontWeight: 600, 
+            color: '#374151',
+            textAlign: 'center',
+            padding: '0.25rem'
+          }}>
+            {periodo.label.split(' ')[0]}
+          </div>
+        ))}
+
+        {/* Linhas dos dias */}
+        {diasSemana.map(dia => (
+          <React.Fragment key={dia.key}>
+            <div style={{ 
+              fontWeight: 500, 
+              color: '#4b5563',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              {dia.label}
+            </div>
+            {periodosComuns.map(periodo => (
+              <div key={`${dia.key}-${periodo.inicio}`} style={{ textAlign: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => toggleDisponibilidade(dia.key, periodo)}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    borderRadius: '4px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: isDisponivel(dia.key, periodo) ? '#10b981' : '#f9fafb',
+                    color: isDisponivel(dia.key, periodo) ? 'white' : '#4b5563',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isDisponivel(dia.key, periodo) ? '✓ Disponível' : 'Indisponível'}
+                </button>
+              </div>
+            ))}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Horários customizados */}
+      {horarios.filter(h => h.customizado).length > 0 && (
+        <div style={{
+          backgroundColor: '#f3f4f6',
+          borderRadius: '6px',
+          padding: '0.75rem',
+          marginTop: '1rem'
+        }}>
+          <h4 style={{
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            color: '#374151',
+            margin: '0 0 0.5rem 0'
+          }}>
+            Horários Personalizados:
+          </h4>
+          {horarios.filter(h => h.customizado).map((horario, index) => (
+            <div key={index} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: 'white',
+              padding: '0.5rem',
+              borderRadius: '4px',
+              marginBottom: '0.25rem',
+              fontSize: '0.75rem'
+            }}>
+              <span>
+                <strong>{diasSemana.find(d => d.key === horario.dia)?.label}:</strong> {horario.label}
+              </span>
+              <button
+                onClick={() => removerHorarioCustomizado(horarios.indexOf(horario))}
+                style={{
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '3px',
+                  fontSize: '0.625rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Remover
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Botões para adicionar horários customizados */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        marginTop: '0.75rem',
+        flexWrap: 'wrap'
+      }}>
+        {diasSemana.map(dia => (
+          <button
+            key={dia.key}
+            type="button"
+            onClick={() => adicionarHorarioCustomizado(dia.key)}
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.25rem 0.5rem',
+              backgroundColor: '#e5e7eb',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              color: '#374151'
+            }}
+          >
+            + {dia.label.split('-')[0]}
+          </button>
+        ))}
+      </div>
+
+      <p style={{
+        fontSize: '0.75rem',
+        color: '#6b7280',
+        marginTop: '0.75rem',
+        fontStyle: 'italic'
+      }}>
+        💡 Marque os períodos em que o professor está disponível. 
+        Use horários personalizados para restrições específicas.
+      </p>
+    </div>
+  );
+};
+
 // Componente de Modal de Ajuda Corrigido
 const HelpModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -484,6 +709,90 @@ const EdChronos = () => {
   const [showResults, setShowResults] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
+  // Função para excluir turma
+const excluirTurma = (id) => {
+  if (window.confirm('Tem certeza que deseja excluir esta turma? Esta ação não pode ser desfeita.')) {
+    setTurmas(turmas.filter(turma => turma.id !== id));
+    // Limpar cronogramas se existirem
+    if (cronogramas[id]) {
+      const novosCronogramas = { ...cronogramas };
+      delete novosCronogramas[id];
+      setCronogramas(novosCronogramas);
+    }
+    // Remover turma da disponibilidade dos professores
+    setProfessores(professores.map(professor => ({
+      ...professor,
+      turmasDisponiveis: professor.turmasDisponiveis.filter(turmaId => turmaId !== id)
+    })));
+  }
+};
+
+// Função para excluir matéria
+const excluirMateria = (id) => {
+  if (window.confirm('Tem certeza que deseja excluir esta matéria? Esta ação não pode ser desfeita.')) {
+    setMaterias(materias.filter(materia => materia.id !== id));
+    // Remover matéria dos professores
+    setProfessores(professores.map(professor => ({
+      ...professor,
+      materias: professor.materias.filter(materiaId => materiaId !== id)
+    })));
+    // Limpar cronogramas existentes pois podem estar inválidos
+    setCronogramas({});
+    setShowResults(false);
+  }
+};
+
+// Função para excluir professor
+const excluirProfessor = (id) => {
+  if (window.confirm('Tem certeza que deseja excluir este professor? Esta ação não pode ser desfeita.')) {
+    setProfessores(professores.filter(professor => professor.id !== id));
+    // Limpar cronogramas existentes pois podem estar inválidos
+    setCronogramas({});
+    setShowResults(false);
+  }
+};
+
+// Função para editar turma (opcional - para facilitar correções)
+const editarTurma = (id) => {
+  const turma = turmas.find(t => t.id === id);
+  if (turma) {
+    setNovaTurma({
+      nome: turma.nome,
+      temposPorDia: turma.temposPorDia,
+      periodos: turma.periodos
+    });
+    // Remover a turma antiga
+    setTurmas(turmas.filter(t => t.id !== id));
+  }
+};
+
+// Função para editar matéria
+const editarMateria = (id) => {
+  const materia = materias.find(m => m.id === id);
+  if (materia) {
+    setNovaMateria({
+      nome: materia.nome,
+      temposMinimo: materia.temposMinimo,
+      temposMaximo: materia.temposMaximo
+    });
+    setMaterias(materias.filter(m => m.id !== id));
+  }
+};
+
+// Função para editar professor
+const editarProfessor = (id) => {
+  const professor = professores.find(p => p.id === id);
+  if (professor) {
+    setNovoProfessor({
+      nome: professor.nome,
+      materias: professor.materias,
+      turmasDisponiveis: professor.turmasDisponiveis,
+      horarios: professor.horarios || []
+    });
+    setProfessores(professores.filter(p => p.id !== id));
+  }
+};
+
   // Estados para formulários
   const [novaTurma, setNovaTurma] = useState({
     nome: '',
@@ -581,21 +890,42 @@ const EdChronos = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  // Função para adicionar professor
-  const adicionarProfessor = () => {
-    if (novoProfessor.nome.trim()) {
-      setProfessores([...professores, { ...novoProfessor, id: Date.now() }]);
-      setNovoProfessor({
-        nome: '',
-        materias: [],
-        turmasDisponiveis: [],
-        horarios: []
-      });
-    }
-  };
+  // Função para verificar disponibilidade do professor em horário específico
+const professorDisponivelNoHorario = (professorId, dia, inicio, fim) => {
+  const professor = professores.find(p => p.id === professorId);
+  if (!professor || !professor.horarios || professor.horarios.length === 0) {
+    return true; // Se não há restrições, assume disponível
+  }
 
-  // Função para adicionar matéria
-  const adicionarMateria = () => {
+  // Verificar se há sobreposição com horários disponíveis
+  return professor.horarios.some(horario => {
+    if (horario.dia !== dia) return false;
+    
+    const horarioInicio = timeToMinutes(horario.inicio);
+    const horarioFim = timeToMinutes(horario.fim);
+    const aulaInicio = timeToMinutes(inicio);
+    const aulaFim = timeToMinutes(fim);
+    
+    // Verificar se a aula está dentro do horário disponível
+    return aulaInicio >= horarioInicio && aulaFim <= horarioFim;
+  });
+};
+
+// Função para adicionar professor
+const adicionarProfessor = () => {
+  if (novoProfessor.nome.trim()) {
+    setProfessores([...professores, { ...novoProfessor, id: Date.now() }]);
+    setNovoProfessor({
+      nome: '',
+      materias: [],
+      turmasDisponiveis: [],
+      horarios: []
+    });
+  }
+};
+
+// Função para adicionar matéria
+const adicionarMateria = () => {
   if (novaMateria.nome.trim() && novaMateria.temposMinimo <= novaMateria.temposMaximo) {
     setMaterias([...materias, { ...novaMateria, id: Date.now() }]);
     setNovaMateria({
@@ -608,120 +938,218 @@ const EdChronos = () => {
   }
 };
 
-  // Algoritmo de geração de cronograma
-  const gerarCronograma = () => {
-    const novoCronograma = {};
-    const professoresOcupados = {}; // Para evitar conflitos de horário
+// Função para calcular prioridade de uma necessidade
+const calcularPrioridadeNecessidade = (turma, materia, professoresDisponiveis) => {
+  let prioridade = 100;
+  
+  // Menor número de professores disponíveis = maior prioridade (menor número)
+  prioridade -= (10 - professoresDisponiveis.length) * 20;
+  
+  // Maior diferença entre máximo e mínimo = menor prioridade
+  const flexibilidade = materia.temposMaximo - materia.temposMinimo;
+  prioridade += flexibilidade * 5;
+  
+  // Matérias com carga horária alta têm prioridade
+  prioridade -= materia.temposMinimo * 3;
+  
+  return prioridade;
+};
 
-    // Inicializar cronograma vazio para cada turma
-    turmas.forEach(turma => {
-      novoCronograma[turma.id] = JSON.parse(JSON.stringify(turma.temposDetalhados));
-    });
+// Função para escolher o melhor professor para um horário
+const escolherMelhorProfessor = (professoresDisponiveis, professoresOcupados, tempo) => {
+  // Filtrar professores disponíveis no horário
+  const professoresLivres = professoresDisponiveis.filter(professor => {
+    const chaveHorario = `${tempo.dia}-${tempo.inicio}-${tempo.fim}`;
+    const ocupado = professoresOcupados[professor.id]?.has(chaveHorario);
+    
+    if (ocupado) return false;
+    
+    return professorDisponivelNoHorario(professor.id, tempo.dia, tempo.inicio, tempo.fim);
+  });
 
-    // Algoritmo de alocação por prioridade
-    const tentativasAlocacao = [];
+  if (professoresLivres.length === 0) return null;
 
-    // Gerar todas as possíveis alocações
-    turmas.forEach(turma => {
-      materias.forEach(materia => {
-        const professoresCapazes = professores.filter(prof => 
-          prof.materias.includes(materia.id) && 
-          prof.turmasDisponiveis.includes(turma.id)
-        );
+  // Escolher professor com menor carga de trabalho atual
+  return professoresLivres.reduce((melhor, atual) => {
+    const cargaAtual = professoresOcupados[atual.id]?.size || 0;
+    const cargaMelhor = professoresOcupados[melhor.id]?.size || 0;
+    
+    return cargaAtual < cargaMelhor ? atual : melhor;
+  });
+};
 
-        professoresCapazes.forEach(professor => {
-          for (let tempos = materia.temposMinimo; tempos <= materia.temposMaximo; tempos++) {
-            tentativasAlocacao.push({
-              turma: turma.id,
-              materia: materia.id,
-              professor: professor.id,
-              temposNecessarios: tempos,
-              prioridade: calcularPrioridade(turma, materia, professor, tempos)
-            });
-          }
+// Função melhorada para encontrar tempos livres
+const encontrarTemposLivresMelhorado = (cronogramaTurma, professoresOcupados, professoresDisponiveis, turmaId) => {
+  const temposLivres = [];
+  const diasSemana = ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
+
+  diasSemana.forEach(dia => {
+    cronogramaTurma[dia].forEach((tempo, index) => {
+      if (!tempo.professor && !tempo.materia) {
+        // Verificar se pelo menos um professor está disponível neste horário
+        const algumProfessorDisponivel = professoresDisponiveis.some(professor => {
+          const chaveHorario = `${dia}-${tempo.inicio}-${tempo.fim}`;
+          const professorOcupado = professoresOcupados[professor.id]?.has(chaveHorario);
+          
+          if (professorOcupado) return false;
+          
+          // Verificar restrições de horário do professor
+          return professorDisponivelNoHorario(professor.id, dia, tempo.inicio, tempo.fim);
         });
-      });
-    });
 
-    // Ordenar por prioridade
-    tentativasAlocacao.sort((a, b) => b.prioridade - a.prioridade);
-
-    // Alocar tempos
-    tentativasAlocacao.forEach(tentativa => {
-      const temposLivres = encontrarTemposLivres(
-        novoCronograma[tentativa.turma], 
-        professoresOcupados, 
-        tentativa.professor,
-        tentativa.temposNecessarios
-      );
-
-      if (temposLivres.length >= tentativa.temposNecessarios) {
-        // Alocar os tempos
-        for (let i = 0; i < tentativa.temposNecessarios; i++) {
-          const tempo = temposLivres[i];
-          novoCronograma[tentativa.turma][tempo.dia][tempo.index] = {
-            ...novoCronograma[tentativa.turma][tempo.dia][tempo.index],
-            professor: tentativa.professor,
-            materia: tentativa.materia
-          };
-
-          // Marcar professor como ocupado neste horário
-          const chaveHorario = `${tempo.dia}-${tempo.inicio}-${tempo.fim}`;
-          if (!professoresOcupados[tentativa.professor]) {
-            professoresOcupados[tentativa.professor] = new Set();
-          }
-          professoresOcupados[tentativa.professor].add(chaveHorario);
+        if (algumProfessorDisponivel) {
+          temposLivres.push({
+            dia,
+            index,
+            inicio: tempo.inicio,
+            fim: tempo.fim
+          });
         }
       }
     });
+  });
 
-    setCronogramas(novoCronograma);
-    setShowResults(true);
+  // Embaralhar para distribuir melhor ao longo da semana
+  for (let i = temposLivres.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [temposLivres[i], temposLivres[j]] = [temposLivres[j], temposLivres[i]];
+  }
+
+  return temposLivres;
+};
+
+// Algoritmo melhorado de geração de cronograma
+const gerarCronogramaMelhorado = () => {
+  console.log('Iniciando geração de cronograma melhorado...');
+  
+  const novoCronograma = {};
+  const professoresOcupados = {}; // professor -> Set de "dia-inicio-fim"
+  const estatisticas = {
+    tentativasTotal: 0,
+    sucessos: 0,
+    falhas: 0,
+    detalhes: []
   };
 
-  // Função para calcular prioridade de alocação
-  const calcularPrioridade = (turma, materia, professor, tempos) => {
-    let prioridade = 100;
-    
-    // Priorizar matérias com menos tempos disponíveis
-    prioridade += (5 - materia.temposMaximo) * 20;
-    
-    // Priorizar professores com menos turmas disponíveis
-    prioridade += (10 - professor.turmasDisponiveis.length) * 10;
-    
-    // Priorizar alocação mínima de tempos
-    if (tempos === materia.temposMinimo) {
-      prioridade += 30;
-    }
+  // Inicializar cronograma vazio para cada turma
+  turmas.forEach(turma => {
+    novoCronograma[turma.id] = JSON.parse(JSON.stringify(turma.temposDetalhados));
+  });
 
-    return prioridade;
-  };
+  // Criar lista de necessidades por matéria e turma
+  const necessidades = [];
+  
+  turmas.forEach(turma => {
+    materias.forEach(materia => {
+      const professoresCapazes = professores.filter(prof => 
+        prof.materias.includes(materia.id) && 
+        prof.turmasDisponiveis.includes(turma.id)
+      );
 
-  // Função para encontrar tempos livres
-  const encontrarTemposLivres = (cronogramaTurma, professoresOcupados, professorId, temposNecessarios) => {
-    const temposLivres = [];
-    const diasSemana = ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
+      if (professoresCapazes.length > 0) {
+        necessidades.push({
+          turmaId: turma.id,
+          turmaNome: turma.nome,
+          materiaId: materia.id,
+          materiaNome: materia.nome,
+          temposMinimo: materia.temposMinimo,
+          temposMaximo: materia.temposMaximo,
+          professoresDisponiveis: professoresCapazes,
+          temposAlocados: 0,
+          prioridade: calcularPrioridadeNecessidade(turma, materia, professoresCapazes)
+        });
+      }
+    });
+  });
 
-    diasSemana.forEach(dia => {
-      cronogramaTurma[dia].forEach((tempo, index) => {
-        if (!tempo.professor && !tempo.materia) {
-          const chaveHorario = `${dia}-${tempo.inicio}-${tempo.fim}`;
-          const professorOcupado = professoresOcupados[professorId]?.has(chaveHorario);
+  // Ordenar necessidades por prioridade (menor = mais prioritário)
+  necessidades.sort((a, b) => a.prioridade - b.prioridade);
+  
+  console.log('Necessidades identificadas:', necessidades);
+
+  // Algoritmo de alocação em rodadas
+  let rodada = 0;
+  let progressoNaRodada = true;
+
+  while (progressoNaRodada && rodada < 10) { // Máximo 10 rodadas para evitar loop infinito
+    progressoNaRodada = false;
+    rodada++;
+    
+    console.log(`\n--- RODADA ${rodada} ---`);
+
+    necessidades.forEach(necessidade => {
+      if (necessidade.temposAlocados >= necessidade.temposMaximo) {
+        return; // Já atingiu o máximo
+      }
+
+      // Tentar alocar mais um tempo para esta necessidade
+      const temposLivres = encontrarTemposLivresMelhorado(
+        novoCronograma[necessidade.turmaId],
+        professoresOcupados,
+        necessidade.professoresDisponiveis,
+        necessidade.turmaId
+      );
+
+      if (temposLivres.length > 0) {
+        // Escolher o melhor professor disponível
+        const melhorProfessor = escolherMelhorProfessor(
+          necessidade.professoresDisponiveis,
+          professoresOcupados,
+          temposLivres[0] // Usar o primeiro tempo livre
+        );
+
+        if (melhorProfessor) {
+          const tempo = temposLivres[0];
           
-          if (!professorOcupado) {
-            temposLivres.push({
-              dia,
-              index,
-              inicio: tempo.inicio,
-              fim: tempo.fim
-            });
+          // Verificar disponibilidade do professor no horário
+          if (professorDisponivelNoHorario(melhorProfessor.id, tempo.dia, tempo.inicio, tempo.fim)) {
+            // Alocar o tempo
+            novoCronograma[necessidade.turmaId][tempo.dia][tempo.index] = {
+              ...novoCronograma[necessidade.turmaId][tempo.dia][tempo.index],
+              professor: melhorProfessor.id,
+              materia: necessidade.materiaId
+            };
+
+            // Marcar professor como ocupado
+            const chaveHorario = `${tempo.dia}-${tempo.inicio}-${tempo.fim}`;
+            if (!professoresOcupados[melhorProfessor.id]) {
+              professoresOcupados[melhorProfessor.id] = new Set();
+            }
+            professoresOcupados[melhorProfessor.id].add(chaveHorario);
+
+            necessidade.temposAlocados++;
+            progressoNaRodada = true;
+            estatisticas.sucessos++;
+
+            console.log(`✓ Alocado: ${necessidade.materiaNome} para ${necessidade.turmaNome} com ${melhorProfessor.nome} (${tempo.dia} ${tempo.inicio}-${tempo.fim})`);
           }
         }
-      });
-    });
+      }
 
-    return temposLivres;
-  };
+      estatisticas.tentativasTotal++;
+    });
+  }
+
+  // Verificar necessidades não atendidas
+  const necessidadesNaoAtendidas = necessidades.filter(n => n.temposAlocados < n.temposMinimo);
+  
+  if (necessidadesNaoAtendidas.length > 0) {
+    console.warn('⚠️ Necessidades não atendidas:', necessidadesNaoAtendidas);
+    
+    // Mostrar alerta para o usuário
+    const mensagemAlerta = necessidadesNaoAtendidas.map(n => 
+      `• ${n.materiaNome} para ${n.turmaNome}: ${n.temposAlocados}/${n.temposMinimo} tempos alocados`
+    ).join('\n');
+    
+    alert(`Atenção! Algumas matérias não atingiram a carga horária mínima:\n\n${mensagemAlerta}\n\nSugestões:\n- Verifique a disponibilidade dos professores\n- Considere aumentar os períodos das turmas\n- Revise as cargas horárias das matérias`);
+  }
+
+  console.log('Estatísticas da geração:', estatisticas);
+  console.log('Cronograma final:', novoCronograma);
+
+  setCronogramas(novoCronograma);
+  setShowResults(true);
+};
 
   // Função para obter nome da entidade por ID
   const obterNome = (lista, id) => {
@@ -831,13 +1259,31 @@ const EdChronos = () => {
             <div className="bg-white p-6 rounded-lg border">
               <h3 className="text-lg font-semibold mb-4">Turmas Cadastradas</h3>
               <div className="grid gap-4">
-                {turmas.map(turma => (
-                  <div key={turma.id} className="border rounded-lg p-4">
-                    <h4 className="font-medium">{turma.nome}</h4>
-                    <p className="text-sm text-gray-600">{turma.temposPorDia} tempos por dia</p>
-                  </div>
-                ))}
-              </div>
+  {turmas.map(turma => (
+    <div key={turma.id} className="border rounded-lg p-4 flex justify-between items-center">
+      <div>
+        <h4 className="font-medium">{turma.nome}</h4>
+        <p className="text-sm text-gray-600">{turma.temposPorDia} tempos por dia</p>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => editarTurma(turma.id)}
+          className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
+          title="Editar turma"
+        >
+          ✏️ Editar
+        </button>
+        <button
+          onClick={() => excluirTurma(turma.id)}
+          className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+          title="Excluir turma"
+        >
+          🗑️ Excluir
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
             </div>
           </div>
         );
@@ -924,18 +1370,36 @@ const EdChronos = () => {
             </div>
 
             <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Matérias Cadastradas</h3>
-              <div className="grid gap-4">
-                {materias.map(materia => (
-                  <div key={materia.id} className="border rounded-lg p-4">
-                    <h4 className="font-medium">{materia.nome}</h4>
-                    <p className="text-sm text-gray-600">
-                      {materia.temposMinimo} - {materia.temposMaximo} tempos por semana
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+  <h3 className="text-lg font-semibold mb-4">Matérias Cadastradas</h3>
+  <div className="grid gap-4">
+    {materias.map(materia => (
+      <div key={materia.id} className="border rounded-lg p-4 flex justify-between items-center">
+        <div>
+          <h4 className="font-medium">{materia.nome}</h4>
+          <p className="text-sm text-gray-600">
+            {materia.temposMinimo} - {materia.temposMaximo} tempos por semana
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => editarMateria(materia.id)}
+            className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition-colors"
+            title="Editar matéria"
+          >
+            ✏️ Editar
+          </button>
+          <button
+            onClick={() => excluirMateria(materia.id)}
+            className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+            title="Excluir matéria"
+          >
+            🗑️ Excluir
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
           </div>
         );
 
@@ -1012,6 +1476,12 @@ const EdChronos = () => {
                     ))}
                   </div>
                 </div>
+                {/* ADICIONE O COMPONENTE AQUI - APÓS A SEÇÃO DE TURMAS DISPONÍVEIS */}
+          <ProfessorScheduleConfig 
+            horarios={novoProfessor.horarios}
+            setHorarios={(horarios) => setNovoProfessor({...novoProfessor, horarios})}
+            turmas={turmas}
+          />
               </div>
               
               <button
@@ -1023,21 +1493,44 @@ const EdChronos = () => {
             </div>
 
             <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Professores Cadastrados</h3>
-              <div className="grid gap-4">
-                {professores.map(professor => (
-                  <div key={professor.id} className="border rounded-lg p-4">
-                    <h4 className="font-medium">{professor.nome}</h4>
-                    <p className="text-sm text-gray-600">
-                      Matérias: {professor.materias.map(id => obterNome(materias, id)).join(', ')}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Turmas: {professor.turmasDisponiveis.map(id => obterNome(turmas, id)).join(', ')}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+  <h3 className="text-lg font-semibold mb-4">Professores Cadastrados</h3>
+  <div className="grid gap-4">
+    {professores.map(professor => (
+      <div key={professor.id} className="border rounded-lg p-4 flex justify-between items-start">
+        <div className="flex-1">
+          <h4 className="font-medium">{professor.nome}</h4>
+          <p className="text-sm text-gray-600">
+            Matérias: {professor.materias.map(id => obterNome(materias, id)).join(', ')}
+          </p>
+          <p className="text-sm text-gray-600">
+            Turmas: {professor.turmasDisponiveis.map(id => obterNome(turmas, id)).join(', ')}
+          </p>
+          {professor.horarios && professor.horarios.length > 0 && (
+            <p className="text-xs text-blue-600 mt-1">
+              ⏰ Horários configurados: {professor.horarios.length} períodos
+            </p>
+          )}
+        </div>
+        <div className="flex gap-2 ml-4">
+          <button
+            onClick={() => editarProfessor(professor.id)}
+            className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition-colors"
+            title="Editar professor"
+          >
+            ✏️ Editar
+          </button>
+          <button
+            onClick={() => excluirProfessor(professor.id)}
+            className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+            title="Excluir professor"
+          >
+            🗑️ Excluir
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
           </div>
         );
 
@@ -1068,7 +1561,7 @@ const EdChronos = () => {
 
               {turmas.length > 0 && materias.length > 0 && professores.length > 0 ? (
                 <button
-                  onClick={gerarCronograma}
+                  onClick={gerarCronogramaMelhorado}
                   className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg hover:bg-orange-700 flex items-center justify-center text-lg font-medium"
                 >
                   <Calendar className="mr-2" /> Gerar Cronograma Automaticamente
