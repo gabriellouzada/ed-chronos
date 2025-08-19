@@ -605,3 +605,80 @@ tbody tr:hover {
   border-color: #bfdbfe;
   color: #1e40af;
 }
+/* Estilos para o modal de ajuda */
+.fixed {
+  position: fixed;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+.prose {
+  max-width: none;
+}
+
+.prose h1 {
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose h2 {
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose h3 {
+  color: #4b5563;
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose thead th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+/* Estilos para melhor responsividade do header */
+@media (max-width: 768px) {
+  .header-help-button {
+    padding: 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .header-help-button span {
+    display: none !important;
+  }
+}
+
+/* Garantir que o modal está acima de tudo */
+.help-modal-overlay {
+  z-index: 9999 !important;
+}
